@@ -4,7 +4,6 @@ import plotly.express as px
 from scraper import scrape_linkedin
 from analyzer import analyze_job_text
 
-
 st.set_page_config(page_title="Job Market AI Analyst", layout="wide")
 
 st.title("🔎 AI Job Market Analyzer")
@@ -14,8 +13,7 @@ with st.sidebar:
     st.header("Search Settings")
     job_title = st.text_input("Job title", "Python Developer")
     location = st.text_input("Location", "Remote")
-    max_jobs = st.slider("Number of positions", 2, 20, 5) 
-    
+    max_jobs = st.slider("Number of positions", 2, 20, 5)     
     st.info("Note: Make sure to put the keys in Secrets when publishing.")
     
     start_btn = st.button("Analyzing...🚀")
@@ -32,7 +30,7 @@ if start_btn:
             
         status.update(label=f"Scraped {len(raw_jobs)} Jobs Succefully", state="complete")
 
-    # 2. مرحلة التحليل (AI Analysis)
+    # 2. Analyzing (AI Analysis)
     st.divider()
     progress_bar = st.progress(0, text="Analyzing job descriptions with AI...")
     
@@ -62,7 +60,7 @@ if start_btn:
         df_tools = pd.Series(all_tools).value_counts().reset_index()
         df_tools.columns = ["Tool", "Count"]
 
-        # الأعمدة
+        # Columns
         col1, col2 = st.columns(2)
         
         with col1:

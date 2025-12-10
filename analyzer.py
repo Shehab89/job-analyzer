@@ -13,7 +13,6 @@ def analyze_job_text(text):
     if not configure_genai():
         return None
 
-    # إعداد النموذج ليكون دقيقاً جداً (Temperature 0)
     generation_config = {
         "temperature": 0.0,
         "response_mime_type": "application/json",
