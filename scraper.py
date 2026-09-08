@@ -1,9 +1,14 @@
-from apify_client import ApifyClient
+import os
+
 import streamlit as st
+from apify_client import ApifyClient
 
 def get_apify_client():
-  
-    token = st.secrets.get("apify_api_cIVfOFq8agM5ctMITBGbXOUL5ujRbU0tzB6x")
+    """Read the Apify token from Streamlit secrets or the environment.
+
+    Looked up BY NAME -- the token value must never appear in this file.
+    """
+    token = st.secrets.get("APIFY_API_TOKEN") or os.getenv("APIFY_API_TOKEN")
     if not token:
         return None
     return ApifyClient(token)
@@ -11,7 +16,10 @@ def get_apify_client():
 def scrape_linkedin(job_title, location, max_jobs=10):
     client = get_apify_client()
     if not client:
-        st.error("Apify API Token not found!")
+        st.error(
+            "APIFY_API_TOKEN is not set. Add it to .streamlit/secrets.toml "
+            "(see .streamlit/secrets.toml.example)."
+        )
         return []
 
     run_input = {

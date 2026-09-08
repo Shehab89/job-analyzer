@@ -1,13 +1,25 @@
+import json
+import os
+
 import google.generativeai as genai
 import streamlit as st
-import json
 
 def configure_genai():
-    api_key = st.secrets.get("AIzaSyCL5yH8nVc4UTRa4PbeXx7dSfSFWVuwqdY")
-    if api_key:
-        genai.configure(api_key=api_key)
-        return True
-    return False
+    """Read the Gemini key from Streamlit secrets or the environment.
+
+    The key is looked up BY NAME. Never put the key value itself in this file:
+    this repository is public, and anything committed here stays in git history
+    even after it is deleted.
+    """
+    api_key = st.secrets.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        st.error(
+            "GEMINI_API_KEY is not set. Add it to .streamlit/secrets.toml "
+            "(see .streamlit/secrets.toml.example) or export it in your shell."
+        )
+        return False
+    genai.configure(api_key=api_key)
+    return True
 
 def analyze_job_text(text):
     if not configure_genai():
@@ -39,5 +51,9 @@ def analyze_job_text(text):
     try:
         response = model.generate_content(prompt)
         return json.loads(response.text)
-    except Exception as e:
+    except json.JSONDecodeError:
+        st.warning("The model returned something that was not valid JSON; skipping this posting.")
+        return {"skills": [], "tools": [], "years_experience": 0, "salary_max": 0}
+    except Exception as exc:
+        st.warning(f"Analysis failed for one posting: {exc}")
         return {"skills": [], "tools": [], "years_experience": 0, "salary_max": 0}
