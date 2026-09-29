@@ -1,0 +1,8 @@
+streamlit>=1.50
+pandas>=2.2,<3
+plotly>=6.0
+pydantic>=2.7
+requests>=2.31
+google-genai>=1.30
+python-jobspy>=1.1.80
+apify-client>=1.8
