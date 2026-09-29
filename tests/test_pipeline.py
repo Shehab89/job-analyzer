@@ -131,3 +131,72 @@ def test_insights_handle_empty_lists():
     assert isinstance(ins.key_insights(df), list)
     assert ins.salary_frame(df)[1] is None
     assert isinstance(ins.cooccurrence(df), pd.DataFrame)
+
+
+SEARCH_HTML = """
+<li><div class="base-card job-search-card" data-entity-urn="urn:li:jobPosting:4012345678">
+  <a class="base-card__full-link" href="https://nl.linkedin.com/jobs/view/data-engineer-at-acme-4012345678?position=1&amp;trk=x"></a>
+  <h3 class="base-search-card__title">  Data Engineer  </h3>
+  <h4 class="base-search-card__subtitle"><a href="#">Acme</a></h4>
+  <span class="job-search-card__location">Amsterdam, North Holland, Netherlands</span>
+  <span class="job-search-card__salary-info">€60,000 - €75,000</span>
+  <time class="job-search-card__listdate" datetime="2026-09-20">1 week ago</time>
+</div></li>
+<li><div class="base-card"><a class="base-card__full-link"
+  href="https://nl.linkedin.com/jobs/view/bi-developer-at-beta-4098765432?position=2"></a>
+  <h3 class="base-search-card__title">BI Developer</h3>
+  <h4 class="base-search-card__subtitle">Beta</h4></div></li>
+"""
+
+POSTING_HTML = """
+<section><div class="show-more-less-html__markup">
+  <p>We need <strong>3+ years of experience</strong> with Python and SQL.</p><ul><li>Airflow</li><li>Azure</li></ul>
+</div>
+<figcaption class="num-applicants__caption">Over 200 applicants</figcaption>
+<ul class="description__job-criteria-list">
+  <li class="description__job-criteria-item"><h3 class="description__job-criteria-subheader">Seniority level</h3>
+      <span class="description__job-criteria-text">Mid-Senior level</span></li>
+  <li class="description__job-criteria-item"><h3 class="description__job-criteria-subheader">Employment type</h3>
+      <span class="description__job-criteria-text">Full-time</span></li>
+</ul></section>
+"""
+
+
+def test_linkedin_parsers():
+    cards = scraper.parse_linkedin_search(SEARCH_HTML)
+    assert [c["id"] for c in cards] == ["4012345678", "4098765432"]
+    first = cards[0]
+    assert (first["title"], first["company"], first["posted_at"]) == ("Data Engineer", "Acme", "2026-09-20")
+    assert first["url"] == "https://nl.linkedin.com/jobs/view/data-engineer-at-acme-4012345678"
+    assert first["salary_text"] == "€60,000 - €75,000"
+
+    details = scraper.parse_linkedin_posting(POSTING_HTML)
+    assert "Python and SQL" in details["description"] and "Airflow" in details["description"]
+    assert details["experience_level"] == "Mid-Senior level" and details["applicants"] == 200
+
+
+def test_linkedin_scraper_end_to_end(monkeypatch):
+    class Resp:
+        def __init__(self, status, text=""):
+            self.status_code, self.text = status, text
+
+    calls = []
+
+    def fake_get(self, url, params=None, **kw):
+        calls.append(url)
+        if "search" in url:
+            return Resp(200, SEARCH_HTML if params["start"] == 0 else "")
+        if len([c for c in calls if "jobPosting" in c]) == 1:
+            return Resp(429)  # first detail call is rate-limited, retry must succeed
+        return Resp(200, POSTING_HTML)
+
+    import requests
+    monkeypatch.setattr(requests.Session, "get", fake_get)
+    monkeypatch.setattr(scraper.time, "sleep", lambda s: None)
+    jobs = scraper.scrape_linkedin_free.__wrapped__("Data Engineer", "Netherlands", 10, "Past week", "Hybrid")
+    assert len(jobs) == 2 and jobs[0]["source"] == "LinkedIn" and jobs[0]["work_mode_hint"] == "Hybrid"
+    assert "Salary: €60,000 - €75,000" in jobs[0]["description"]
+
+    (result, _), _ = analyzer.analyze_jobs(jobs)
+    assert result["seniority"] == "Mid-level" and result["years_experience"] == 3
+    assert result["salary_min"] == 60_000 and {"Python", "SQL"} <= set(result["tech_skills"])

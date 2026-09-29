@@ -54,7 +54,7 @@ adzuna_id, adzuna_key = get_setting("ADZUNA_APP_ID"), get_setting("ADZUNA_APP_KE
 with st.sidebar:
     st.header("1 · Where to get jobs")
     source = st.radio("Data source", scraper.SOURCES, index=0,
-                      help="JobSpy and Demo need no keys. Adzuna needs a free key, Apify a paid token.")
+                      help="LinkedIn, JobSpy and Demo need no keys. Adzuna needs a free key, Apify a paid token.")
     is_demo = source.startswith("Demo")
 
     st.header("2 · What to search")
@@ -62,11 +62,14 @@ with st.sidebar:
     country = st.selectbox("Country", list(scraper.COUNTRIES), index=0, disabled=is_demo)
     location = st.text_input("City / region (optional)", "", disabled=is_demo,
                              placeholder="e.g. Amsterdam — empty = whole country")
-    sites = ["LinkedIn"]
+    sites, workplace = ["LinkedIn"], "Any"
+    if source.startswith("LinkedIn"):
+        workplace = st.selectbox("Workplace", list(scraper.LINKEDIN_WORKPLACE), index=0)
     if source.startswith("JobSpy"):
-        sites = st.multiselect("Job sites", list(scraper.JOBSPY_SITES), default=["LinkedIn", "Indeed"])
+        sites = st.multiselect("Job sites", list(scraper.JOBSPY_SITES), default=["Indeed"])
     date_posted = st.selectbox("Posted", list(scraper.DATE_POSTED_HOURS), index=2, disabled=is_demo)
-    max_jobs = st.slider("Jobs per site", 5, 100, 30, step=5, disabled=is_demo)
+    max_jobs = st.slider("Number of jobs", 5, 100, 25, step=5, disabled=is_demo,
+                         help="More jobs = better statistics but slower. LinkedIn takes ~1-2 seconds per job.")
 
     st.header("3 · How to analyse")
     use_ai = st.toggle("AI extraction (Gemini)", value=bool(gemini_key), disabled=not gemini_key,
@@ -84,6 +87,13 @@ with st.sidebar:
 def fetch_jobs():
     if is_demo:
         return load_sample_jobs()
+    if source.startswith("LinkedIn"):
+        where = f"{location}, {country}" if location else country
+        bar = st.progress(0.0, text="Reading job descriptions on LinkedIn…")
+        jobs = scraper.scrape_linkedin_free(job_title, where, max_jobs, date_posted, workplace,
+                                            _on_progress=lambda p: bar.progress(p, text="Reading job descriptions on LinkedIn…"))
+        bar.empty()
+        return jobs
     if source.startswith("JobSpy"):
         if not sites:
             raise scraper.ScrapeError("Pick at least one job site.")

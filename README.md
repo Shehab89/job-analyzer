@@ -1,7 +1,7 @@
 # 🔎 Job Market Analyzer
 
 **Type a job title, get a picture of the market.**
-The app collects real job postings (LinkedIn, Indeed, Glassdoor, Google Jobs or Adzuna), reads every posting, and shows you in simple charts:
+The app collects real job postings (free from LinkedIn, or from Indeed, Glassdoor, Google Jobs and Adzuna), reads every posting, and shows you in simple charts:
 
 - which **skills and tools** employers ask for most
 - how many **years of experience** they want
@@ -15,16 +15,22 @@ The app collects real job postings (LinkedIn, Indeed, Glassdoor, Google Jobs or 
 
 ## ▶️ Try it in 1 minute (no keys, no accounts)
 
+You need **Python 3.10 or newer** (3.13 works). Open a terminal (on Windows: *Command Prompt*) and run:
+
 ```bash
 git clone https://github.com/Shehab89/job-analyzer.git
 cd job-analyzer
-pip install -r requirements.txt
-streamlit run app.py
+python -m pip install -r requirements.txt
+python -m streamlit run app.py
 ```
 
-Your browser opens at `http://localhost:8501`. Click **"Try it now with demo data"** and you'll get the full dashboard right away.
+Your browser opens at `http://localhost:8501`. Click **"Try it now with demo data"** to see the full dashboard, or keep the source on **LinkedIn (free, built-in)**, type a job title and press **Analyze the market**.
 
-> Demo data is **fictional** (made-up companies). It's there so you can explore the app. For real data, pick a real source in the sidebar.
+> 💡 Always run the commands **inside the `job-analyzer` folder** (that's what `cd job-analyzer` does). *"No such file: requirements.txt"* or *"File does not exist: app.py"* means you're in the wrong folder.
+>
+> No `git`? Download the ZIP from the green **Code** button on GitHub, unzip it, and `cd` into the unzipped folder.
+
+Demo data is **fictional** (made-up companies). It's there so you can explore the app.
 
 ---
 
@@ -50,7 +56,8 @@ Your browser opens at `http://localhost:8501`. Click **"Try it now with demo dat
 
 | Source | Cost | Needs a key? | Good to know |
 |---|---|---|---|
-| **JobSpy** (default) | Free | No | Open-source scraper for **LinkedIn, Indeed, Glassdoor, Google Jobs**. Job sites sometimes block scrapers for a few minutes; if that happens, wait a bit, ask for fewer jobs or pick another site. |
+| **LinkedIn (free, built-in)** ⭐ default | Free | No | Reads LinkedIn's public job pages (the ones you see when logged out). Takes about 1–2 seconds per job because it pauses politely between requests. If LinkedIn slows you down after many searches, wait a few minutes or ask for fewer jobs. |
+| **JobSpy** (optional extra) | Free | No | Adds **Indeed, Glassdoor and Google Jobs**. Install separately: `python -m pip install -r requirements-jobspy.txt`. ⚠️ Only works on **Python 3.10–3.12**. |
 | **Adzuna API** | Free (up to a limit) | Yes, free: [developer.adzuna.com](https://developer.adzuna.com) | An official, very reliable jobs API for NL, UK, DE, US and more. Descriptions are shorter (a summary), so skill counts are a bit lower. |
 | **Apify** | Paid | Yes: [apify.com](https://apify.com) | Cloud LinkedIn scraper. The actor can be changed with `APIFY_ACTOR_ID`. |
 | **Demo data** | Free | No | 60 fictional postings for trying out the app. |
@@ -109,7 +116,7 @@ Use the **filters** above the tabs (seniority, work mode, source) to zoom in, fo
 
 ```
 app.py              The Streamlit dashboard (sidebar, tabs, charts)
-scraper.py          Collects postings from JobSpy / Adzuna / Apify → one common format
+scraper.py          Collects postings (built-in LinkedIn scraper, JobSpy, Adzuna, Apify) → one common format
 analyzer.py         Extracts facts from each posting (Gemini AI or the keyword engine)
 skills_catalog.py   The list of known skills/tools and their aliases ("sklearn" → "scikit-learn")
 insights.py         All the counting, salary maths and the plain-English insights
@@ -129,7 +136,7 @@ pip install pytest
 pytest
 ```
 
-The tests cover skill matching, salary/experience parsing, the AI path (mocked), fallbacks, every data source's field mapping, and the insight calculations.
+The tests cover skill matching, salary/experience parsing, the AI path (mocked), fallbacks, the LinkedIn page parser (including a rate-limit retry), every data source's field mapping, and the insight calculations.
 
 ## 🚀 Deploy for free
 
