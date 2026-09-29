@@ -24,7 +24,7 @@ python -m pip install -r requirements.txt
 python -m streamlit run app.py
 ```
 
-Your browser opens at `http://localhost:8501`. Click **"Try it now with demo data"** to see the full dashboard, or keep the source on **LinkedIn (free, built-in)**, type a job title and press **Analyze the market**.
+Your browser opens at `http://localhost:8501`. For **real jobs**, keep the source on **LinkedIn (free, built-in)**, type a job title and press **🚀 Analyze the market** in the sidebar (no key needed). The **"Load demo data"** button only shows fictional example jobs.
 
 > 💡 Always run the commands **inside the `job-analyzer` folder** (that's what `cd job-analyzer` does). *"No such file: requirements.txt"* or *"File does not exist: app.py"* means you're in the wrong folder.
 >

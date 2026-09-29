@@ -142,13 +142,13 @@ if "jobs" not in st.session_state:
     st.markdown(
         "Find out **what employers really ask for**: the most wanted skills and tools, how much experience "
         "you need, what it pays and who is hiring. Pick a source and a job title on the left and press "
-        "**Analyze the market**."
+        "**Analyze the market**. Real LinkedIn data is free and needs no key."
     )
     c1, c2, c3 = st.columns(3)
     c1.info("**1. Collect**\n\nJob postings from LinkedIn, Indeed, Glassdoor, Google Jobs or Adzuna.")
     c2.info("**2. Extract**\n\nAI (or a free keyword engine) reads every posting and pulls out the facts.")
     c3.info("**3. Understand**\n\nCharts, plain-language insights and a match score against your own skills.")
-    if st.button("✨ Try it now with demo data (no keys needed)"):
+    if st.button("🧪 Just exploring? Load demo data (fictional jobs)"):
         st.session_state["jobs"], _ = analyze_jobs(load_sample_jobs())
         st.session_state["query"] = "Demo data (fictional)"
         st.rerun()
@@ -157,6 +157,10 @@ if "jobs" not in st.session_state:
 # ----------------------------------------------------------------------------- dashboard
 
 df_all = ins.to_frame(st.session_state["jobs"])
+if st.session_state["query"].startswith("Demo"):
+    st.warning("**You are looking at DEMO data (made-up companies).** For real jobs: in the sidebar choose "
+               "**LinkedIn (free, built-in)**, type a job title and press **🚀 Analyze the market**. No key needed.",
+               icon="🧪")
 st.caption(f"Search: **{st.session_state['query']}** · {len(df_all)} postings · "
            f"extracted by {', '.join(sorted(df_all['extracted_by'].unique()))}")
 
