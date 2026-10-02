@@ -1,0 +1,3 @@
+# Optional extra for the "JobSpy" source (Indeed, Glassdoor, Google Jobs).
+# JobSpy pins an old numpy, so it only installs on Python 3.10 - 3.12.
+python-jobspy>=1.1.80
